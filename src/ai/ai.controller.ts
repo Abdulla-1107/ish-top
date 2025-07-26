@@ -6,6 +6,7 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  Req,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -13,6 +14,7 @@ import { extname } from 'path';
 import * as fs from 'fs';
 import { AiService } from './ai.service';
 import { ApiConsumes, ApiBody, ApiTags } from '@nestjs/swagger';
+import { Request } from 'express';
 
 @ApiTags('AI')
 @Controller('ai')
@@ -44,18 +46,22 @@ export class AiController {
       },
     },
   })
-  async voice(@UploadedFile() file: Express.Multer.File) {
+  async voice(@UploadedFile() file: Express.Multer.File, @Req() req: Request) {
     if (!file) {
       throw new BadRequestException(
         'Fayl yuborilmadi! Iltimos, audio fayl yuboring.',
       );
     }
+    const userId = req['user-id'];
+    const context = await this.aiService.getUserContext(userId);
 
     const transcript = await this.aiService.transcribeAudio(file.path);
+    const aiReply = await this.aiService.askWithContext(transcript, context);
 
     return {
       status: 'success',
       transcript,
+      aiReply,
     };
   }
 }

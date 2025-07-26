@@ -10,6 +10,7 @@ import { CreateUserDto } from './dto/register-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { LoginUserDto } from './dto/login-user.dto';
 import { UserQueryDto } from './dto/query-user.dto';
+import { AiService } from 'src/ai/ai.service';
 
 @Injectable()
 export class UserService {
@@ -17,6 +18,7 @@ export class UserService {
     private readonly prisma: PrismaService,
     private readonly otpService: OtpService,
     private readonly jwt: JwtService,
+    private readonly aiService: AiService,
   ) {}
 
   removeNullValues(obj: any): { [k: string]: unknown } {
@@ -98,12 +100,11 @@ export class UserService {
   async verifyOtp(phone: string, code: string) {
     return this.otpService.verifyOtp(phone, code);
   }
-
   async register(dto: CreateUserDto) {
     const isVerified = await this.otpService.isPhoneVerified(dto.phone);
-    if (!isVerified) {
-      throw new BadRequestException('Telefon raqami OTP bilan tasdiqlanmagan');
-    }
+    // if (!isVerified) {
+    //   throw new BadRequestException('Telefon raqami OTP bilan tasdiqlanmagan');
+    // }
 
     const isCheckPhone = await this.prisma.user.findFirst({
       where: { phone: dto.phone },
@@ -112,9 +113,19 @@ export class UserService {
     if (isCheckPhone) {
       throw new BadRequestException("Ushbu telefon raqam ro'yxatdan o'tilgan");
     }
+
     const registerUser = await this.prisma.user.create({
       data: dto,
     });
+
+    await this.aiService.storeUserContext(registerUser.id, {
+      fullName: dto.fullName,
+      phone: dto.phone,
+      lastname: dto.lastName,
+      role: dto.role,
+    });
+    console.log('UserContext saqlandi:', registerUser.id);
+
     return { data: registerUser };
   }
 

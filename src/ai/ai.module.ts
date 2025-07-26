@@ -8,5 +8,6 @@ import { ResumeModule } from 'src/resume/resume.module';
   imports: [AudioModule, ResumeModule],
   controllers: [AiController],
   providers: [AiService],
+  exports: [AiService],
 })
 export class AiModule {}

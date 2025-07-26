@@ -6,7 +6,7 @@ export class CreateResumeDto {
   @ApiProperty({ example: 'Sardor' })
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name: string  ;
 
   @ApiPropertyOptional({ example: 25 })
   @IsInt()

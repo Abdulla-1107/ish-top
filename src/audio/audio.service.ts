@@ -12,7 +12,8 @@ export class AudioService {
   async transcribeAudio(filePath: string): Promise<string> {
     const form = new FormData();
     form.append('file', fs.createReadStream(filePath));
-    form.append('model', 'whisper-1');
+    form.append('model', 'gpt-4o-transcribe');
+    form.append('language', 'uz');
 
     const response = await axios.post(
       'https://api.openai.com/v1/audio/transcriptions',
